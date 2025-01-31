@@ -1,4 +1,4 @@
-use crate::core::{Def, Param, Var, ID};
+use crate::core::{Def, Param, Var};
 
 use super::{Locals, Term};
 

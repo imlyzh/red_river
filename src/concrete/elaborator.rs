@@ -1,5 +1,5 @@
 use crate::{
-    r#abstract::{normalize::{def_to_type, def_to_value, Normalizer}, unify::Unifyer, Globals, Locals, Term}, core::{Def, Param}
+    r#abstract::{normalize::{def_to_type, def_to_value, Normalizer}, unify::unify, Globals, Locals, Term}, core::{Def, Param}
 };
 
 use super::{Expr, RawExpr};
@@ -24,7 +24,7 @@ impl Elaborator {
                 r#type: Box::new(typ.clone()),
             });
             self.local.insert(p.var.id, typ);
-            checked.push(p.var.id.clone());
+            checked.push(p.var.id);
         }
         let ret_type = self.check(def.ret_type, Term::Universe);
         let body = self.check(def.body, ret_type.clone());
@@ -59,7 +59,7 @@ impl Elaborator {
                 let (tm, got) = self.infer(expr);
                 let got = Normalizer::default().term(got);
                 let typ = Normalizer::default().term(typ);
-                if Unifyer::default().unify(&got, &typ) {
+                if unify(&got, &typ) {
                     tm
                 } else {
                     panic!("{:?}: expected '{:?}', got '{:?}'", expr_loc, typ, got)
@@ -69,7 +69,7 @@ impl Elaborator {
     }
 
     pub fn guarded_check(&mut self, param: Param<Box<Term>>, body: Expr, body_type: Term) -> Term {
-        self.local.insert(param.var.id.clone(), *param.r#type);
+        self.local.insert(param.var.id, *param.r#type);
         let r = self.check(body, body_type);
         self.local.remove(&param.var.id);
         r
